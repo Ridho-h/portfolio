@@ -295,11 +295,11 @@ function updateCertPreview() {
   box.style.display = 'flex';
   img.src = directUrl;
   img.onload = () => {
-    text.textContent = '✓ Gambar berhasil dimuat!';
+    text.textContent = '✓ Image loaded successfully!';
     text.style.color = 'var(--accent)';
   };
   img.onerror = () => {
-    text.textContent = '⚠ Gagal memuat gambar. Pastikan izin share Google Drive diset "Anyone with the link".';
+    text.textContent = '⚠ Failed to load image. Make sure Google Drive sharing is set to "Anyone with the link".';
     text.style.color = '#ef4444';
   };
 }

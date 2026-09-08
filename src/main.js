@@ -351,7 +351,7 @@ function renderCertificates(certs) {
       const directViewLink = c.imageUrl || displayImgUrl;
       iconHTML = `
         <div class="cert-image">
-          <a href="${directViewLink}" target="_blank" rel="noopener" title="Lihat Sertifikat">
+          <a href="${directViewLink}" target="_blank" rel="noopener" title="View Certificate">
             <img src="${displayImgUrl}" alt="${c.name}" loading="lazy" onerror="this.onerror=null; this.closest('.cert-image').innerHTML='<div class=\\'cert-icon\\'><svg width=\\'20\\' height=\\'20\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><path d=\\'M12 15l-3 3 1.5 1.5L12 18l1.5 1.5L15 18l-3-3z\\'/><circle cx=\\'12\\' cy=\\'9\\' r=\\'5\\'/><path d=\\'M12 14v4\\'/></svg></div>';" />
           </a>
         </div>

@@ -4,16 +4,16 @@ import { getAuth } from 'firebase/auth';
 
 /*
  * ═══════════════════════════════════════════════════════
- *  FIREBASE CONFIG — GANTI DENGAN KONFIGURASI ANDA
+ *  FIREBASE CONFIG — REPLACE WITH YOUR CONFIGURATION
  * ═══════════════════════════════════════════════════════
  *
- *  Cara mendapatkan config:
- *  1. Buka https://console.firebase.google.com/
- *  2. Buat project baru (gratis)
- *  3. Tambahkan Web App
- *  4. Copy konfigurasi ke bawah ini
- *  5. Aktifkan Firestore Database (mode test)
- *  6. Aktifkan Authentication > Email/Password
+ *  How to get your config:
+ *  1. Go to https://console.firebase.google.com/
+ *  2. Create a new project (free)
+ *  3. Add a Web App
+ *  4. Copy the configuration below
+ *  5. Enable Firestore Database (test mode)
+ *  6. Enable Authentication > Email/Password
  */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "REPLACE_ME",
