@@ -16,12 +16,12 @@ import { getAuth } from 'firebase/auth';
  *  6. Aktifkan Authentication > Email/Password
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyCQPBVLyeog6b4UZA_On2xtvK1_lwWdxXQ",
-  authDomain: "ridho-portfolio.firebaseapp.com",
-  projectId: "ridho-portfolio",
-  storageBucket: "ridho-portfolio.firebasestorage.app",
-  messagingSenderId: "1075389826092",
-  appId: "1:1075389826092:web:919329daf0592759d7fd89"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "REPLACE_ME",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
 };
 
 let app, db, auth;
