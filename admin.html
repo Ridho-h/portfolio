@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Portfolio Dashboard</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/admin.css" />
+</head>
+<body>
+
+  <!-- ═══ LOGIN SCREEN ═══ -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <span class="login-icon">◆</span>
+        <h1>Admin Access</h1>
+        <p>Portfolio Dashboard</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required autocomplete="email" placeholder="your@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
+        </div>
+        <button type="submit" class="btn-login" id="login-btn">Sign In</button>
+        <p id="login-error" class="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN DASHBOARD ═══ -->
+  <div id="admin-dashboard" class="dashboard" style="display:none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">MRH<span style="color:#d4a843;">.</span></span>
+        <span class="sidebar-label">Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-tab="projects">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Projects
+        </button>
+        <button class="sidebar-link" data-tab="certificates">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M12 14v4"/><path d="M9 21l3-3 3 3"/></svg>
+          Certificates
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="./" class="sidebar-back">← Back to Portfolio</a>
+        <button id="logout-btn" class="sidebar-logout">Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- ── PROJECTS TAB ── -->
+      <div class="tab-content active" id="tab-projects">
+        <div class="tab-header">
+          <h2>Projects</h2>
+          <button class="btn-add" id="btn-add-project">+ Add Project</button>
+        </div>
+
+        <!-- Add/Edit Form (hidden by default) -->
+        <div class="form-panel" id="project-form-panel" style="display:none;">
+          <h3 id="project-form-title">Add New Project</h3>
+          <form id="project-form">
+            <input type="hidden" id="project-id" />
+            <div class="form-row">
+              <div class="form-group">
+                <label for="project-title">Title *</label>
+                <input type="text" id="project-title" required placeholder="Project Name" />
+              </div>
+              <div class="form-group">
+                <label for="project-order">Order</label>
+                <input type="number" id="project-order" value="1" min="1" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="project-desc">Description *</label>
+              <textarea id="project-desc" rows="3" required placeholder="Describe your project..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="project-tags">Tags (comma-separated)</label>
+                <input type="text" id="project-tags" placeholder="Python, TensorFlow, CV" />
+              </div>
+              <div class="form-group">
+                <label for="project-url">URL</label>
+                <input type="url" id="project-url" placeholder="https://github.com/..." />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="project-featured" />
+                Featured (full-width display)
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save">Save Project</button>
+              <button type="button" class="btn-cancel" id="cancel-project">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Project Cards List -->
+        <div class="items-grid" id="projects-list">
+          <p class="empty-state">Loading projects...</p>
+        </div>
+      </div>
+
+      <!-- ── CERTIFICATES TAB ── -->
+      <div class="tab-content" id="tab-certificates">
+        <div class="tab-header">
+          <h2>Certificates</h2>
+          <button class="btn-add" id="btn-add-cert">+ Add Certificate</button>
+        </div>
+
+        <div class="form-panel" id="cert-form-panel" style="display:none;">
+          <h3 id="cert-form-title">Add New Certificate</h3>
+          <form id="cert-form">
+            <input type="hidden" id="cert-id" />
+            <div class="form-group">
+              <label for="cert-name">Certificate Name *</label>
+              <input type="text" id="cert-name" required placeholder="Machine Learning Specialization" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cert-issuer">Issuer *</label>
+                <input type="text" id="cert-issuer" required placeholder="Coursera / Google / etc." />
+              </div>
+              <div class="form-group">
+                <label for="cert-url">Credential URL</label>
+                <input type="url" id="cert-url" placeholder="https://coursera.org/verify/..." />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cert-image-url">Image URL (Google Drive / Imgur / Direct URL)</label>
+              <input type="url" id="cert-image-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing" />
+              <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 4px;">
+                💡 Link Google Drive otomatis dikonversi agar dapat tampil. Pastikan akses sharing di Google Drive diset ke <strong>"Anyone with the link"</strong> (Siapa saja yang memiliki link).
+              </small>
+              <div id="cert-img-preview-box" style="margin-top: 10px; display: none; align-items: center; gap: 12px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 6px;">
+                <img id="cert-img-preview" src="" alt="Preview" style="max-height: 60px; max-width: 90px; border-radius: 4px; object-fit: contain; border: 1px solid var(--border);" />
+                <span id="cert-img-preview-text" style="font-size: 0.8rem; color: var(--accent);">Gambar terdeteksi</span>
+              </div>
+              <input type="hidden" id="cert-file-type" />
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save">Save Certificate</button>
+              <button type="button" class="btn-cancel" id="cancel-cert">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="items-grid" id="certs-list">
+          <p class="empty-state">Loading certificates...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>
