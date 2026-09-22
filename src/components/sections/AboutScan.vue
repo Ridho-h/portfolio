@@ -188,13 +188,7 @@
               </div>
             </div>
 
-            <!-- Credentials Badges -->
-            <div class="credentials-bar">
-              <span class="cred-chip">UNSRI GPA 3.92</span>
-              <span class="cred-chip">Google APAC Winner</span>
-              <span class="cred-chip">Samsung Batch 5 Finalist</span>
-              <span class="cred-chip">Bangkit ML Distinction</span>
-            </div>
+
           </div>
         </div>
       </div>
@@ -236,8 +230,8 @@ onMounted(() => {
     end: 'bottom 20%',
     scrub: 0.15,
     onUpdate: (self) => {
-      // Complete 100% of the scan animation within the first 25% of entering the About section
-      const p = Math.min(1, self.progress / 0.25);
+      // Complete 100% of the scan animation across the first 50% of entering the About section
+      const p = Math.min(1, self.progress / 0.50);
       scanProgress.value = p;
 
       // Play tactical audio tick when new bounding box snaps into view
@@ -673,19 +667,4 @@ onBeforeUnmount(() => {
   }
 }
 
-.credentials-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-
-  .cred-chip {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: #f8fafc;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.35rem 0.65rem;
-    border-radius: 6px;
-  }
-}
 </style>
