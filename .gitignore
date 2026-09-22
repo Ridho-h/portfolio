@@ -27,3 +27,11 @@ yarn-error.log*
 # System files
 .DS_Store
 Thumbs.db
+
+# Scratch / probe files
+_*.txt
+_probe*.js
+_probe*.py
+
+# AI / IDE caches
+.workbuddy-ai/

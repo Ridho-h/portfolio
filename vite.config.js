@@ -1,25 +1,28 @@
+import crypto from 'node:crypto';
+
+// Polyfill crypto.hash for Node versions < 21.7.0
+if (!crypto.hash) {
+  crypto.hash = (algorithm, data, outputEncoding = 'hex') => {
+    return crypto.createHash(algorithm).update(data).digest(outputEncoding);
+  };
+}
+
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import vue from '@vitejs/plugin-vue';
+import glsl from 'vite-plugin-glsl';
 
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin.html'),
-      },
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/three')) {
-            return 'vendor-three';
-          }
-          if (id.includes('node_modules/firebase')) {
-            return 'vendor-firebase';
-          }
-        },
-      },
-    },
-    chunkSizeWarningLimit: 700,
-  },
   base: './',
+  plugins: [
+    vue(),
+    glsl(),
+  ],
+  server: {
+    port: 5173,
+    open: true,
+  },
+  build: {
+    target: 'es2022',
+    chunkSizeWarningLimit: 1500,
+  },
 });
