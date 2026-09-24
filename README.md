@@ -1,6 +1,6 @@
 # Muhammad Ridho Hidayat — AI & Machine Learning Engineer Portfolio v3.0
 
-> **"The Model Awakens"** — An interactive, cybernetic 3D spatial portfolio representing an artificial intelligence system powering on from cold standby to full operational inference. Built with Vue 3, Three.js, GSAP, and TypeScript.
+>  An interactive portfolio. Built with Vue 3, Three.js, GSAP, and TypeScript.
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live_Portfolio-00f2fe?style=for-the-badge&logo=googlechrome&logoColor=white)](https://ridho-h.github.io/portfolio/)
 [![Vue 3](https://img.shields.io/badge/Vue-3.5-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
