@@ -2,135 +2,147 @@
   <section ref="sectionRef" class="projects-inference" id="projects">
     <div class="projects-container">
       <!-- Section Header -->
-      <div class="section-lead">
+      <div class="section-lead" ref="headerRef">
         <div class="cyber-badge cyber-badge--emerald">
           <span class="pulse-dot"></span>
-          <span>STAGE 04 // DIFFUSION INFERENCE</span>
+          <span>STAGE 04 // INFERENCE REVEAL</span>
         </div>
         <h2 class="section-title">
           <span>INFERENCE</span>
-          <span class="title-gradient">REVEAL</span>
+          <span class="title-gradient">TESTBENCH</span>
         </h2>
         <p class="section-desc">
-          Each project resolves like a generative diffusion generation. Cards start as high-entropy
-          latent noise and denoise into production architectures as they enter the viewport.
+          Select a neural model checkpoint to inspect live telemetry, run simulated inference,
+          and review verified benchmark metrics.
         </p>
       </div>
 
-      <!-- Project Cards Stack -->
-      <div class="cards-stack">
-        <div
+      <!-- Model Switcher Tabs (Minimalist & Intuitive) -->
+      <div class="model-tabs-rail" ref="tabsRef">
+        <button
           v-for="(proj, idx) in projectsData"
           :key="proj.id"
-          class="project-diffusion-card glass-panel"
-          :ref="(el) => setCardRef(el, idx)"
-          :class="{ 'card--denoised': cardStates[idx]?.denoised }"
+          class="model-tab-btn"
+          :class="{ 'model-tab-btn--active': activeIdx === idx }"
+          :style="{ '--proj-accent': proj.accentColor }"
+          @click="selectProject(idx)"
+          @mouseenter="onHover"
         >
-          <!-- 1. Live Terminal Caption Typing Above Each Card -->
-          <div class="card-terminal-bar">
-            <div class="term-left">
-              <span class="term-prompt">></span>
-              <span class="term-typing">{{ cardStates[idx]?.captionText || '> sampling latent prior...' }}</span>
+          <span class="tab-index">0{{ idx + 1 }}</span>
+          <span class="tab-dot" :style="{ backgroundColor: proj.accentColor }"></span>
+          <span class="tab-name">{{ proj.name }}</span>
+          <span class="tab-category">{{ proj.category.split('&')[0].trim() }}</span>
+        </button>
+      </div>
+
+      <!-- Single Focused Showcase Card -->
+      <div
+        class="showcase-card glass-panel"
+        ref="cardRef"
+        :style="{ '--accent': currentProj.accentColor }"
+      >
+        <!-- Scanning Laser Beam (Fires on entrance & on 'Run Inference') -->
+        <div class="scan-laser" :class="{ 'scan-laser--active': isInferring }"></div>
+
+        <!-- Card Top Bar: Metadata & Status -->
+        <div class="card-top-bar">
+          <div class="top-left">
+            <span class="cat-badge">{{ currentProj.category }}</span>
+            <span class="code-badge">{{ currentProj.codename }}</span>
+          </div>
+          <div class="top-right">
+            <span class="status-pill">
+              <span class="pulse-dot"></span>
+              {{ currentProj.status }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Main Content -->
+        <div class="card-body">
+          <div class="content-header">
+            <div class="title-wrap">
+              <h3 class="model-title">{{ currentProj.name }}</h3>
+              <p class="model-tagline">{{ currentProj.tagline }}</p>
             </div>
-            <div class="term-right">
-              <span class="step-badge" :class="{ 'step-badge--done': cardStates[idx]?.denoised }">
-                {{ cardStates[idx]?.denoised ? 'STEP 50/50 [CONVERGED]' : `DENOISING: ${cardStates[idx]?.step || 0}/50` }}
-              </span>
+            <!-- Quick GitHub Button -->
+            <a
+              :href="currentProj.repo"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="cyber-btn cyber-btn--secondary repo-link-btn"
+              @mouseenter="onHover"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>SOURCE REPO ↗</span>
+            </a>
+          </div>
+
+          <!-- Concise Summary -->
+          <p class="model-summary">{{ currentProj.summary }}</p>
+
+          <!-- Verified Benchmark Metrics -->
+          <div class="metrics-strip">
+            <div
+              v-for="[val, lbl] in currentProj.metrics"
+              :key="lbl"
+              class="metric-item"
+            >
+              <span class="m-val">{{ val }}</span>
+              <span class="m-lbl">{{ lbl }}</span>
             </div>
           </div>
 
-          <!-- 2. Main Card Content (Subject to Diffusion Denoise CSS filter) -->
-          <div
-            class="card-inner"
-            :style="{
-              filter: `blur(${cardStates[idx]?.blur ?? 20}px)`,
-              opacity: cardStates[idx]?.opacity ?? 0.6,
-            }"
-          >
-            <!-- Noise Texture Overlay Layer -->
-            <div
-              class="noise-overlay"
-              :style="{ opacity: cardStates[idx]?.noiseOpacity ?? 0.8 }"
-              v-show="!cardStates[idx]?.denoised"
-            ></div>
+          <!-- Tech Stack Tags -->
+          <div class="stack-row">
+            <span v-for="tech in currentProj.stack" :key="tech" class="tech-pill">
+              {{ tech }}
+            </span>
+          </div>
 
-            <div class="card-main-grid">
-              <!-- Left Column: Metadata & Core Summary -->
-              <div class="card-col-left">
-                <div class="proj-category">
-                  <span class="cat-tag">{{ proj.category }}</span>
-                  <span class="code-tag">{{ proj.codename }}</span>
-                </div>
+          <!-- Interactive Inference Action & Real-Time Verdict Bar -->
+          <div class="inference-action-panel">
+            <div class="action-left">
+              <button
+                class="cyber-btn cyber-btn--primary run-btn"
+                :disabled="isInferring"
+                @click="triggerInference"
+                @mouseenter="onHover"
+              >
+                <span class="btn-icon" :class="{ 'btn-icon--spin': isInferring }">⚡</span>
+                <span>{{ isInferring ? 'EXECUTING INFERENCE...' : 'RUN INFERENCE' }}</span>
+              </button>
+            </div>
 
-                <h3 class="proj-title" :style="{ '--proj-accent': proj.accentColor }">
-                  {{ proj.name }}
-                </h3>
-
-                <p class="proj-tagline">{{ proj.tagline }}</p>
-                <p class="proj-summary">{{ proj.summary }}</p>
-
-                <!-- Architecture Highlight Callout -->
-                <div class="highlight-callout" :style="{ borderLeftColor: proj.accentColor }">
-                  <span class="highlight-label">PIPELINE CORE:</span>
-                  <span class="highlight-text">{{ proj.architectureHighlight }}</span>
-                </div>
-
-                <!-- Tech Stack Tags -->
-                <div class="stack-wrap">
-                  <span v-for="tech in proj.stack" :key="tech" class="tech-pill">
-                    {{ tech }}
-                  </span>
-                </div>
-
-                <!-- Direct GitHub Repo Action Button -->
-                <div class="card-actions">
-                  <a
-                    :href="proj.repo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="cyber-btn cyber-btn--primary"
-                    @mouseenter="onHover"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                    <span>GITHUB REPO ↗</span>
-                  </a>
-                </div>
+            <!-- Live Output Terminal Verdict -->
+            <div class="action-verdict">
+              <div class="verdict-bar">
+                <span class="term-sym">></span>
+                <span class="term-msg">{{ inferenceMsg }}</span>
               </div>
+            </div>
 
-              <!-- Right Column: Live Benchmark Badges & 4-Step Pipeline -->
-              <div class="card-col-right">
-                <!-- Verified Metric Badges -->
-                <div class="metrics-grid">
-                  <div
-                    v-for="[val, lbl] in proj.metrics"
-                    :key="lbl"
-                    class="metric-chip"
-                    :style="{ '--metric-accent': proj.accentColor }"
-                  >
-                    <span class="m-val">{{ val }}</span>
-                    <span class="m-lbl">{{ lbl }}</span>
-                  </div>
-                </div>
-
-                <!-- 4-Step Pipeline Architecture Flow -->
-                <div class="pipeline-card">
-                  <div class="pipeline-header">
-                    <span class="pipe-code">// PIPELINE DATA FLOW</span>
-                    <span class="pipe-badge">REAL-TIME</span>
-                  </div>
-                  <div class="pipeline-steps">
-                    <div v-for="step in proj.pipeline" :key="step.step" class="pipe-step-item">
-                      <span class="step-num" :style="{ color: proj.accentColor }">{{ step.step }}</span>
-                      <div class="step-desc-wrap">
-                        <span class="step-title">{{ step.title }}</span>
-                        <span class="step-desc">{{ step.desc }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <!-- Previous / Next Quick Stepper -->
+            <div class="action-nav">
+              <button
+                class="nav-arrow-btn"
+                @click="cycleProject(-1)"
+                title="Previous Model"
+                @mouseenter="onHover"
+              >
+                ‹
+              </button>
+              <span class="nav-count">0{{ activeIdx + 1 }} / 0{{ projectsData.length }}</span>
+              <button
+                class="nav-arrow-btn"
+                @click="cycleProject(1)"
+                title="Next Model"
+                @mouseenter="onHover"
+              >
+                ›
+              </button>
             </div>
           </div>
         </div>
@@ -140,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { projectsData } from '../../data/projects-data';
@@ -149,87 +161,124 @@ import { soundManager } from '../../audio/soundManager';
 gsap.registerPlugin(ScrollTrigger);
 
 const sectionRef = ref<HTMLElement | null>(null);
-const cardElements: HTMLElement[] = [];
+const headerRef = ref<HTMLElement | null>(null);
+const tabsRef = ref<HTMLElement | null>(null);
+const cardRef = ref<HTMLElement | null>(null);
 
-function setCardRef(el: any, idx: number) {
-  if (el) cardElements[idx] = el as HTMLElement;
-}
+const activeIdx = ref(0);
+const isInferring = ref(false);
 
-interface CardState {
-  blur: number;
-  opacity: number;
-  noiseOpacity: number;
-  step: number;
-  denoised: boolean;
-  captionText: string;
-}
+const currentProj = computed(() => projectsData[activeIdx.value]);
 
-const cardStates = reactive<CardState[]>(
-  projectsData.map((p) => ({
-    blur: 20,
-    opacity: 0.5,
-    noiseOpacity: 0.8,
-    step: 0,
-    denoised: false,
-    captionText: `> initializing latent prior for [${p.name}]...`,
-  }))
-);
+const verdictMap: Record<string, string> = {
+  spotterai: 'CONVERGED: 42ms // 33 LANDMARKS TRACKED · BI-LSTM ATTENTION VERIFIED · REP +1',
+  'food-agent': 'CONVERGED: 42ms // CONFIDENCE 0.91 >= 0.65 · ROUTED TO LOCAL EFFICIENTNET-B4',
+  'coding-agent': 'CONVERGED: 1.2s // 4-AGENT DAG EXECUTION PASSED · 20/20 DOCKER PYTESTS GREEN',
+  shopai: 'CONVERGED: REACT LOOP // PINECONE RETRIEVAL + DUCKDUCKGO FALLBACK · GROUNDED RESPONSE',
+};
 
-const stTriggers: ScrollTrigger[] = [];
+const inferenceMsg = ref(verdictMap[projectsData[0].id]);
 
 function onHover() {
   soundManager.playHover();
 }
 
+function selectProject(idx: number) {
+  if (idx === activeIdx.value) return;
+  activeIdx.value = idx;
+  soundManager.playClick();
+  inferenceMsg.value = verdictMap[projectsData[idx].id];
+
+  // Quick card transition
+  if (cardRef.value) {
+    gsap.fromTo(
+      cardRef.value,
+      { opacity: 0.75, y: 8 },
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+    );
+  }
+}
+
+function cycleProject(delta: number) {
+  const nextIdx = (activeIdx.value + delta + projectsData.length) % projectsData.length;
+  selectProject(nextIdx);
+}
+
+function triggerInference() {
+  if (isInferring.value) return;
+  isInferring.value = true;
+  soundManager.playTerminalBeep();
+  inferenceMsg.value = `SAMPLING LATENT SPACE FOR [${currentProj.value.name}]...`;
+
+  setTimeout(() => {
+    isInferring.value = false;
+    inferenceMsg.value = verdictMap[currentProj.value.id];
+    soundManager.playChime(620 + activeIdx.value * 70);
+  }, 450);
+}
+
+const stTriggers: ScrollTrigger[] = [];
+
 onMounted(() => {
-  cardElements.forEach((cardEl, idx) => {
-    if (!cardEl) return;
-    const proj = projectsData[idx];
+  if (!sectionRef.value) return;
 
-    // ScrollTrigger for each card's diffusion denoising reveal
-    const st = ScrollTrigger.create({
-      trigger: cardEl,
-      start: 'top 82%',
+  // ScrollTrigger entrance animation
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: sectionRef.value,
+      start: 'top 75%',
+      once: true,
       onEnter: () => {
-        if (cardStates[idx].denoised) return;
-
-        // Animate diffusion denoising over 0.7s
-        const state = cardStates[idx];
-        const tweenObj = { blur: 20, noise: 0.8, step: 0 };
-
         soundManager.playHover();
-
-        gsap.to(tweenObj, {
-          blur: 0,
-          noise: 0,
-          step: 50,
-          duration: 0.75,
-          ease: 'power2.out',
-          onUpdate: () => {
-            state.blur = tweenObj.blur;
-            state.noiseOpacity = tweenObj.noise;
-            state.step = Math.round(tweenObj.step);
-            state.opacity = 0.5 + (tweenObj.step / 50) * 0.5;
-
-            // Stream terminal caption
-            if (tweenObj.step < 20) {
-              state.captionText = proj.denoiseSteps[0];
-            } else if (tweenObj.step < 40) {
-              state.captionText = proj.denoiseSteps[1];
-            } else {
-              state.captionText = proj.denoiseSteps[3];
-            }
-          },
-          onComplete: () => {
-            state.denoised = true;
-            soundManager.playChime(560 + idx * 80);
-          },
-        });
       },
-    });
-
-    stTriggers.push(st);
+    },
   });
+
+  if (headerRef.value) {
+    tl.from(headerRef.value, {
+      opacity: 0,
+      y: 24,
+      duration: 0.6,
+      ease: 'power3.out',
+    });
+  }
+
+  if (tabsRef.value) {
+    tl.from(
+      tabsRef.value.children,
+      {
+        opacity: 0,
+        y: 16,
+        stagger: 0.08,
+        duration: 0.5,
+        ease: 'power2.out',
+      },
+      '-=0.3'
+    );
+  }
+
+  if (cardRef.value) {
+    tl.from(
+      cardRef.value,
+      {
+        opacity: 0,
+        y: 24,
+        scale: 0.98,
+        duration: 0.6,
+        ease: 'power3.out',
+        onComplete: () => {
+          // Trigger a quick initial entrance sweep
+          isInferring.value = true;
+          setTimeout(() => {
+            isInferring.value = false;
+          }, 400);
+        },
+      },
+      '-=0.2'
+    );
+  }
+
+  stTriggers.push(tl.scrollTrigger as ScrollTrigger);
 });
 
 onBeforeUnmount(() => {
@@ -247,11 +296,11 @@ onBeforeUnmount(() => {
 }
 
 .projects-container {
-  max-width: 1240px;
+  max-width: 1140px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 /* Section Header */
@@ -286,214 +335,261 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
-/* Cards Stack */
-.cards-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
+/* Model Switcher Rail */
+.model-tabs-rail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
 
-.project-diffusion-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(11, 19, 41, 0.88);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  @media (max-width: 860px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-  &.card--denoised {
-    border-color: rgba(0, 242, 254, 0.3);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 242, 254, 0.08);
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Terminal Caption Bar */
-.card-terminal-bar {
+.model-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.9rem 1.15rem;
+  background: rgba(11, 19, 41, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+
+  .tab-index {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .tab-dot {
+    display: none;
+  }
+
+  .tab-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    transition: color 0.2s ease;
+  }
+
+  .tab-category {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(15, 26, 56, 0.85);
+    transform: translateY(-2px);
+
+    .tab-name {
+      color: #f8fafc;
+    }
+  }
+
+  &--active {
+    background: rgba(15, 26, 56, 0.95);
+    border-color: var(--proj-accent, #00f2fe);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.15), inset 0 0 12px rgba(0, 242, 254, 0.05);
+
+    .tab-index {
+      color: var(--proj-accent, #00f2fe);
+    }
+
+    .tab-name {
+      color: #f8fafc;
+    }
+
+    .tab-category {
+      color: var(--proj-accent, #00f2fe);
+    }
+  }
+}
+
+/* Showcase Card */
+.showcase-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 19, 41, 0.92);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+  transition: border-color 0.4s ease;
+
+  &:hover {
+    border-color: var(--accent, #00f2fe);
+  }
+}
+
+/* Scanning Laser Animation */
+.scan-laser {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent, #00f2fe), transparent);
+  box-shadow: 0 0 12px var(--accent, #00f2fe);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.2s ease;
+
+  &--active {
+    opacity: 1;
+    animation: sweep-down 0.45s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes sweep-down {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Card Top Bar */
+.card-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 1.25rem;
-  background: rgba(4, 8, 22, 0.95);
+  padding: 0.85rem 1.75rem;
+  background: rgba(4, 8, 22, 0.85);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-family: var(--font-mono);
   font-size: 0.76rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 
-  .term-left {
+  .top-left {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #94a3b8;
+    gap: 0.75rem;
 
-    .term-prompt {
-      color: #00f2fe;
+    .cat-badge {
+      color: var(--accent, #00f2fe);
+      background: rgba(0, 242, 254, 0.08);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 242, 254, 0.2);
+    }
+
+    .code-badge {
+      color: #64748b;
     }
   }
 
-  .step-badge {
-    color: #f59e0b;
-    font-size: 0.72rem;
-    font-weight: 700;
-
-    &--done {
+  .top-right {
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
       color: #10b981;
+      font-weight: 700;
+      font-size: 0.72rem;
     }
   }
 }
 
-/* Card Inner & Diffusion Noise Overlay */
-.card-inner {
-  position: relative;
-  padding: 2rem;
-  transition: filter 0.05s linear, opacity 0.05s linear;
-}
-
-.noise-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-  background-size: 8px 8px;
-  pointer-events: none;
-}
-
-/* Card Main Grid */
-.card-main-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 2.5rem;
-  align-items: stretch;
-
-  @media (max-width: 960px) {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-/* Left Column */
-.card-col-left {
+/* Card Body */
+.card-body {
+  padding: 2rem 2.25rem;
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+
+  @media (max-width: 640px) {
+    padding: 1.5rem;
+  }
 }
 
-.proj-category {
+.content-header {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-
-  .cat-tag {
-    color: #00f2fe;
-    background: rgba(0, 242, 254, 0.1);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 242, 254, 0.25);
-  }
-
-  .code-tag {
-    color: #64748b;
-  }
-}
-
-.proj-title {
-  margin: 0 0 0.5rem 0;
-  font-family: var(--font-display);
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #f8fafc;
-}
-
-.proj-tagline {
-  margin: 0 0 1rem 0;
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  color: #cbd5e1;
-  font-weight: 500;
-}
-
-.proj-summary {
-  margin: 0 0 1.25rem 0;
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: #94a3b8;
-}
-
-.highlight-callout {
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-left: 3px solid #00f2fe;
-  border-radius: 0 8px 8px 0;
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  .highlight-label {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: #64748b;
-    font-weight: 700;
-  }
-
-  .highlight-text {
-    font-size: 0.85rem;
-    color: #f8fafc;
-    line-height: 1.5;
-  }
-}
-
-.stack-wrap {
-  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 1.75rem;
 
-  .tech-pill {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
-  }
-}
-
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: auto;
-}
-
-/* Right Column */
-.card-col-right {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-
-  .metric-chip {
+  .title-wrap {
     display: flex;
     flex-direction: column;
-    padding: 0.75rem 1rem;
+    gap: 0.25rem;
+
+    .model-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+
+    .model-tagline {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: var(--accent, #00f2fe);
+      font-weight: 500;
+    }
+  }
+
+  .repo-link-btn {
+    white-space: nowrap;
+    padding: 0.6rem 1.15rem;
+    font-size: 0.78rem;
+  }
+}
+
+.model-summary {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+  max-width: 900px;
+}
+
+/* Metrics Strip */
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metric-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.9rem 1.15rem;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+    }
 
     .m-val {
       font-family: var(--font-mono);
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--metric-accent, #00f2fe);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent, #00f2fe);
     }
 
     .m-lbl {
@@ -501,76 +597,123 @@ onBeforeUnmount(() => {
       font-size: 0.68rem;
       color: #94a3b8;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
     }
   }
 }
 
-/* Pipeline Architecture Flow */
-.pipeline-card {
-  padding: 1.25rem;
-  background: rgba(4, 8, 22, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+/* Tech Stack Tags */
+.stack-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 
-  .pipeline-header {
+  .tech-pill {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+  }
+}
+
+/* Interactive Action & Verdict Bar */
+.inference-action-panel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+
+  .run-btn {
+    padding: 0.75rem 1.4rem;
+    font-size: 0.82rem;
+    background: linear-gradient(135deg, var(--accent, #00f2fe) 0%, #0284c7 100%);
+    color: #030712;
+    border: none;
+    cursor: pointer;
+
+    .btn-icon {
+      font-size: 0.95rem;
+
+      &--spin {
+        animation: spin 0.6s linear infinite;
+      }
+    }
+  }
+
+  .action-verdict {
+    flex: 1;
+    min-width: 260px;
+
+    .verdict-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(4, 8, 22, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+
+      .term-sym {
+        color: var(--accent, #00f2fe);
+        font-weight: 700;
+      }
+
+      .term-msg {
+        color: #f8fafc;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .action-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    padding-bottom: 0.5rem;
+    gap: 0.5rem;
 
-    .pipe-code {
-      color: #64748b;
-    }
-
-    .pipe-badge {
-      color: #10b981;
-      font-weight: 700;
-    }
-  }
-
-  .pipeline-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .pipe-step-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-
-    .step-num {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      font-weight: 700;
-      min-width: 22px;
-    }
-
-    .step-desc-wrap {
+    .nav-arrow-btn {
+      width: 36px;
+      height: 36px;
       display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
-      .step-title {
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: #f8fafc;
-      }
-
-      .step-desc {
-        font-size: 0.75rem;
-        line-height: 1.4;
-        color: #94a3b8;
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent, #00f2fe);
+        border-color: var(--accent, #00f2fe);
       }
     }
+
+    .nav-count {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #64748b;
+      min-width: 60px;
+      text-align: center;
+    }
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>

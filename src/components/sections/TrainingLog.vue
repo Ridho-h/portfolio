@@ -1,8 +1,8 @@
 <template>
   <section ref="sectionRef" class="training-log" id="journey">
-    <div class="training-container">
+    <div class="training-container" ref="containerRef">
       <!-- Section Header -->
-      <div class="section-lead">
+      <div class="section-lead" ref="headerRef">
         <div class="cyber-badge cyber-badge--amber">
           <span class="pulse-dot"></span>
           <span>STAGE 05 // MODEL TRAINING RUN</span>
@@ -12,116 +12,154 @@
           <span class="title-gradient">LOG</span>
         </h2>
         <p class="section-desc">
-          Career milestones framed as training epochs along an optimization trajectory.
-          The validation loss curve converges lower from Epoch 01 (0.082) down to Epoch 06 (0.009).
+          Career milestones framed as training epochs along an optimization trajectory,
+          converging toward production excellence.
         </p>
 
-        <!-- Live TensorBoard Telemetry Strip -->
-        <div class="telemetry-run-strip glass-panel">
+        <!-- Live Telemetry & Loss Convergence Pill -->
+        <div class="telemetry-bar glass-panel">
           <div class="tele-item">
-            <span class="k">RUN ID:</span>
-            <span class="v">mrh-career-trajectory-v2</span>
+            <span class="tele-label">SCHEDULER:</span>
+            <span class="tele-val text-cyan">CosineAnnealingLR</span>
           </div>
           <div class="tele-item">
-            <span class="k">SCHEDULER:</span>
-            <span class="v">CosineAnnealingLR</span>
+            <span class="tele-label">CURRENT STEP:</span>
+            <span class="tele-val">{{ currentEpoch.step }} / 7,200</span>
           </div>
           <div class="tele-item">
-            <span class="k">TOTAL STEPS:</span>
-            <span class="v text-cyan">7,200</span>
+            <span class="tele-label">VAL LOSS:</span>
+            <span class="tele-val text-emerald">
+              {{ currentEpoch.valLoss.toFixed(3) }}
+              <span v-if="activeIdx === trainingEpochs.length - 1" class="converged-tag">[CONVERGED]</span>
+            </span>
           </div>
-          <div class="tele-item">
-            <span class="k">FINAL VAL LOSS:</span>
-            <span class="v text-emerald">0.009 (CONVERGED)</span>
+          <div class="tele-play-btn">
+            <button
+              class="auto-play-btn"
+              :class="{ 'auto-play-btn--active': isAutoPlaying }"
+              @click="toggleAutoPlay"
+              @mouseenter="onHover"
+            >
+              <span>{{ isAutoPlaying ? '⏸ PAUSE RUN' : '▶ AUTO-RUN' }}</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Training Run Timeline Track with Animated SVG Loss Curve -->
-      <div class="timeline-track-wrapper">
-        <!-- SVG Loss Curve Path (Drawn along the left on desktop) -->
-        <div class="loss-curve-column" aria-hidden="true">
-          <svg class="loss-curve-svg" viewBox="0 0 80 1200" preserveAspectRatio="none">
-            <!-- Background faint grid guide -->
-            <line x1="40" y1="0" x2="40" y2="1200" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4" />
-            <!-- Active convergence loss curve -->
-            <path
-              ref="lossPathRef"
-              d="M 60,0 C 50,200 45,400 35,600 C 28,800 22,1000 15,1200"
-              fill="none"
-              stroke="url(#lossGrad)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <defs>
-              <linearGradient id="lossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#f59e0b" />
-                <stop offset="50%" stop-color="#00f2fe" />
-                <stop offset="100%" stop-color="#10b981" />
-              </linearGradient>
-            </defs>
-          </svg>
+      <!-- Interactive Horizontal Epoch Rail -->
+      <div class="epoch-rail" ref="railRef">
+        <!-- Connecting Track SVG Line -->
+        <div class="rail-track-bg">
+          <div
+            class="rail-track-fill"
+            :style="{ width: `${(activeIdx / (trainingEpochs.length - 1)) * 100}%` }"
+          ></div>
         </div>
 
-        <!-- Epoch Milestone Cards Stream -->
-        <div class="milestones-stream">
-          <div
-            v-for="(epoch, idx) in trainingEpochs"
-            :key="epoch.id"
-            class="epoch-card glass-panel"
-            :class="{ 'epoch-card--revealed': revealedEpochs[idx] }"
-            :ref="(el) => setEpochRef(el, idx)"
+        <!-- 6 Epoch Milestone Nodes -->
+        <div class="rail-nodes">
+          <button
+            v-for="(ep, idx) in trainingEpochs"
+            :key="ep.id"
+            class="rail-node-btn"
+            :class="{
+              'rail-node-btn--active': activeIdx === idx,
+              'rail-node-btn--passed': activeIdx > idx,
+            }"
+            @click="selectEpoch(idx)"
+            @mouseenter="onHover"
           >
-            <!-- Epoch Header Bar -->
-            <div class="epoch-header-bar">
-              <div class="epoch-badge-grp">
-                <span class="epoch-num">EPOCH 0{{ epoch.epoch }}/0{{ epoch.totalEpochs }}</span>
-                <span class="epoch-step">STEP {{ epoch.step }}</span>
-                <span class="epoch-lr">LR: {{ epoch.learningRate }}</span>
-              </div>
-              <div class="loss-metric-pill">
-                <span class="loss-k">VAL_LOSS:</span>
-                <span class="loss-v">{{ epoch.valLoss.toFixed(3) }}</span>
+            <div class="node-circle">
+              <span class="node-num">0{{ ep.epoch }}</span>
+            </div>
+            <div class="node-meta">
+              <span class="node-short-title">{{ shortTitles[idx] }}</span>
+              <span class="node-loss">loss: {{ ep.valLoss.toFixed(3) }}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Single Focused Milestone Card -->
+      <div class="milestone-card glass-panel" ref="cardRef">
+        <!-- Card Top Bar -->
+        <div class="card-top-bar">
+          <div class="top-left">
+            <span class="epoch-tag">EPOCH 0{{ currentEpoch.epoch }} / 0{{ currentEpoch.totalEpochs }}</span>
+            <span class="step-tag">STEP {{ currentEpoch.step }}</span>
+            <span class="kind-tag">{{ currentEpoch.kind }}</span>
+          </div>
+          <div class="top-right">
+            <span class="period-badge">{{ currentEpoch.period }}</span>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="title-row">
+            <div class="title-wrap">
+              <h3 class="institution-title">{{ currentEpoch.title }}</h3>
+              <div class="role-wrap">
+                <span class="role-arrow">></span>
+                <span class="role-title">{{ currentEpoch.role }}</span>
               </div>
             </div>
+            <div class="loss-badge">
+              <span class="loss-lbl">VAL LOSS</span>
+              <span class="loss-val">{{ currentEpoch.valLoss.toFixed(3) }}</span>
+            </div>
+          </div>
 
-            <!-- Epoch Content -->
-            <div class="epoch-content">
-              <div class="title-row">
-                <h3 class="epoch-title">{{ epoch.title }}</h3>
-                <span class="epoch-period">{{ epoch.period }}</span>
-              </div>
+          <!-- Highlight Summary -->
+          <p class="milestone-summary">{{ currentEpoch.summary }}</p>
 
-              <div class="epoch-role">
-                <span class="role-arrow">></span>
-                <span>{{ epoch.role }}</span>
-                <span class="kind-tag">{{ epoch.kind }}</span>
-              </div>
+          <!-- Key Outputs -->
+          <div class="outputs-list">
+            <div v-for="(outp, oIdx) in currentEpoch.keyOutputs.slice(0, 2)" :key="oIdx" class="outp-item">
+              <span class="outp-icon">▹</span>
+              <span class="outp-text">{{ outp }}</span>
+            </div>
+          </div>
 
-              <p class="epoch-summary">{{ epoch.summary }}</p>
+          <!-- Metric Badges Row -->
+          <div class="metrics-row">
+            <div v-for="[lbl, val] in currentEpoch.metrics" :key="lbl" class="metric-pill">
+              <span class="m-lbl">{{ lbl }}:</span>
+              <span class="m-val">{{ val }}</span>
+            </div>
+          </div>
 
-              <!-- Key Outputs -->
-              <div class="outputs-list">
-                <div v-for="(outp, oIdx) in epoch.keyOutputs" :key="oIdx" class="outp-item">
-                  <span class="outp-dot">▹</span>
-                  <span class="outp-text">{{ outp }}</span>
-                </div>
-              </div>
+          <!-- Tags & Stepper Controls -->
+          <div class="card-footer">
+            <div class="tags-row">
+              <span v-for="tag in currentEpoch.tags" :key="tag" class="tag-pill">
+                #{{ tag }}
+              </span>
+            </div>
 
-              <!-- Metric Pills -->
-              <div class="metrics-row">
-                <div v-for="[lbl, val] in epoch.metrics" :key="lbl" class="m-pill">
-                  <span class="m-lbl">{{ lbl }}:</span>
-                  <span class="m-val">{{ val }}</span>
-                </div>
-              </div>
-
-              <!-- Tags -->
-              <div class="tags-row">
-                <span v-for="tag in epoch.tags" :key="tag" class="tag-pill">
-                  #{{ tag }}
-                </span>
-              </div>
+            <!-- Stepper Navigation -->
+            <div class="stepper-controls">
+              <button
+                class="step-arrow-btn"
+                :disabled="activeIdx === 0"
+                @click="cycleEpoch(-1)"
+                title="Previous Epoch"
+                @mouseenter="onHover"
+              >
+                ‹ PREV
+              </button>
+              <span class="step-indicator">
+                EPOCH 0{{ activeIdx + 1 }} / 0{{ trainingEpochs.length }}
+              </span>
+              <button
+                class="step-arrow-btn"
+                :disabled="activeIdx === trainingEpochs.length - 1"
+                @click="cycleEpoch(1)"
+                title="Next Epoch"
+                @mouseenter="onHover"
+              >
+                NEXT ›
+              </button>
             </div>
           </div>
         </div>
@@ -131,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { trainingEpochs } from '../../data/timeline-epochs';
@@ -140,56 +178,168 @@ import { soundManager } from '../../audio/soundManager';
 gsap.registerPlugin(ScrollTrigger);
 
 const sectionRef = ref<HTMLElement | null>(null);
-const lossPathRef = ref<SVGPathElement | null>(null);
-const epochElements: HTMLElement[] = [];
+const containerRef = ref<HTMLElement | null>(null);
+const headerRef = ref<HTMLElement | null>(null);
+const railRef = ref<HTMLElement | null>(null);
+const cardRef = ref<HTMLElement | null>(null);
 
-function setEpochRef(el: any, idx: number) {
-  if (el) epochElements[idx] = el as HTMLElement;
+const activeIdx = ref(0);
+const isAutoPlaying = ref(false);
+let autoPlayTimer: any = null;
+
+const currentEpoch = computed(() => trainingEpochs[activeIdx.value]);
+
+const shortTitles = [
+  'UNSRI (B.Sc.)',
+  'Samsung Campus',
+  'Bangkit Academy',
+  'Bank Jambi',
+  'GDG on Campus',
+  'Google APAC',
+];
+
+function onHover() {
+  soundManager.playHover();
 }
 
-const revealedEpochs = reactive<boolean[]>(new Array(trainingEpochs.length).fill(false));
+function selectEpoch(idx: number, isAutomatic = false) {
+  if (idx === activeIdx.value) return;
+  activeIdx.value = idx;
+
+  if (!isAutomatic) {
+    soundManager.playClick();
+  }
+
+  // Smooth card transition
+  if (cardRef.value) {
+    gsap.fromTo(
+      cardRef.value,
+      { opacity: 0.8, y: 10 },
+      { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+    );
+  }
+}
+
+function cycleEpoch(delta: number) {
+  const next = Math.max(0, Math.min(trainingEpochs.length - 1, activeIdx.value + delta));
+  selectEpoch(next);
+}
+
+function toggleAutoPlay() {
+  isAutoPlaying.value = !isAutoPlaying.value;
+  soundManager.playClick();
+
+  if (isAutoPlaying.value) {
+    runAutoPlayStep();
+  } else if (autoPlayTimer) {
+    clearTimeout(autoPlayTimer);
+    autoPlayTimer = null;
+  }
+}
+
+function runAutoPlayStep() {
+  if (!isAutoPlaying.value) return;
+
+  autoPlayTimer = setTimeout(() => {
+    if (!isAutoPlaying.value) return;
+    const nextIdx = (activeIdx.value + 1) % trainingEpochs.length;
+    selectEpoch(nextIdx, true);
+    soundManager.playChime(500 + nextIdx * 60);
+
+    if (nextIdx === trainingEpochs.length - 1) {
+      // Completed full run, pause after reaching final converged epoch
+      setTimeout(() => {
+        isAutoPlaying.value = false;
+      }, 1800);
+    } else {
+      runAutoPlayStep();
+    }
+  }, 2000);
+}
+
 const stTriggers: ScrollTrigger[] = [];
 
 onMounted(() => {
   if (!sectionRef.value) return;
 
-  // 1. Loss Curve SVG drawing scrubbed with scroll
-  if (lossPathRef.value) {
-    const path = lossPathRef.value;
-    const length = path.getTotalLength();
-    path.style.strokeDasharray = `${length}`;
-    path.style.strokeDashoffset = `${length}`;
-
-    const stPath = ScrollTrigger.create({
+  // 1. Entrance animation
+  const entranceTl = gsap.timeline({
+    scrollTrigger: {
       trigger: sectionRef.value,
-      start: 'top 70%',
-      end: 'bottom 20%',
-      scrub: 0.3,
-      onUpdate: (self) => {
-        path.style.strokeDashoffset = `${length * (1 - self.progress)}`;
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        soundManager.playHover();
       },
+    },
+  });
+
+  if (headerRef.value) {
+    entranceTl.from(headerRef.value, {
+      opacity: 0,
+      y: 24,
+      duration: 0.6,
+      ease: 'power3.out',
     });
-    stTriggers.push(stPath);
   }
 
-  // 2. Individual Epoch Card reveals as user passes them
-  epochElements.forEach((cardEl, idx) => {
-    if (!cardEl) return;
-    const stCard = ScrollTrigger.create({
-      trigger: cardEl,
-      start: 'top 80%',
-      onEnter: () => {
-        if (!revealedEpochs[idx]) {
-          revealedEpochs[idx] = true;
+  if (railRef.value) {
+    entranceTl.from(
+      railRef.value,
+      {
+        opacity: 0,
+        y: 16,
+        duration: 0.5,
+        ease: 'power2.out',
+      },
+      '-=0.3'
+    );
+  }
+
+  if (cardRef.value) {
+    entranceTl.from(
+      cardRef.value,
+      {
+        opacity: 0,
+        y: 24,
+        scale: 0.98,
+        duration: 0.6,
+        ease: 'power3.out',
+      },
+      '-=0.2'
+    );
+  }
+
+  stTriggers.push(entranceTl.scrollTrigger as ScrollTrigger);
+
+  // 2. Scroll-scrubbed epoch advancement (Desktop only for optimal touch experience)
+  const isDesktop = window.matchMedia('(min-width: 860px)').matches;
+  if (isDesktop && containerRef.value) {
+    const pinTrigger = ScrollTrigger.create({
+      trigger: sectionRef.value,
+      start: 'top 12%',
+      end: '+=1100',
+      pin: true,
+      pinSpacing: true,
+      scrub: 0.4,
+      onUpdate: (self) => {
+        if (isAutoPlaying.value) return;
+        const targetIdx = Math.min(
+          trainingEpochs.length - 1,
+          Math.floor(self.progress * trainingEpochs.length)
+        );
+        if (targetIdx !== activeIdx.value) {
+          activeIdx.value = targetIdx;
           soundManager.playHover();
         }
       },
     });
-    stTriggers.push(stCard);
-  });
+    stTriggers.push(pinTrigger);
+  }
 });
 
 onBeforeUnmount(() => {
+  if (autoPlayTimer) clearTimeout(autoPlayTimer);
   stTriggers.forEach((st) => st.kill());
 });
 </script>
@@ -204,11 +354,11 @@ onBeforeUnmount(() => {
 }
 
 .training-container {
-  max-width: 1240px;
+  max-width: 1140px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2.2rem;
 }
 
 /* Section Header */
@@ -243,216 +393,386 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
-/* Telemetry Strip */
-.telemetry-run-strip {
+/* Telemetry & Loss Strip */
+.telemetry-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
   padding: 0.75rem 1.25rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   font-family: var(--font-mono);
   font-size: 0.76rem;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 
   .tele-item {
     display: flex;
+    align-items: center;
     gap: 0.45rem;
   }
 
-  .k {
+  .tele-label {
     color: #64748b;
   }
 
-  .v {
+  .tele-val {
     color: #f8fafc;
-    font-weight: 600;
-  }
-
-  .text-cyan { color: #00f2fe; }
-  .text-emerald { color: #10b981; }
-}
-
-/* Timeline Track */
-.timeline-track-wrapper {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 1.5rem;
-  align-items: stretch;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* SVG Loss Curve Column */
-.loss-curve-column {
-  position: relative;
-  width: 80px;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.loss-curve-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  overflow: visible;
-}
-
-/* Milestones Stream */
-.milestones-stream {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.epoch-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(11, 19, 41, 0.88);
-  opacity: 0.4;
-  transform: translateY(16px);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &--revealed {
-    opacity: 1;
-    transform: translateY(0);
-    border-color: rgba(0, 242, 254, 0.25);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-  }
-}
-
-.epoch-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 1.25rem;
-  background: rgba(4, 8, 22, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-
-  .epoch-badge-grp {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .epoch-num {
-    color: #f59e0b;
     font-weight: 700;
   }
 
-  .epoch-step {
-    color: #94a3b8;
+  .text-cyan {
+    color: #00f2fe;
   }
 
-  .epoch-lr {
-    color: #64748b;
+  .text-emerald {
+    color: #10b981;
+  }
+
+  .converged-tag {
+    color: #10b981;
     font-size: 0.7rem;
+    margin-left: 0.2rem;
   }
 
-  .loss-metric-pill {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 0.2rem 0.55rem;
-    border-radius: 4px;
+  .tele-play-btn {
+    margin-left: auto;
 
-    .loss-k {
-      color: #64748b;
-      font-size: 0.68rem;
+    @media (max-width: 640px) {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+
+  .auto-play-btn {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: #f59e0b;
+      transform: translateY(-1px);
     }
 
-    .loss-v {
-      color: #10b981;
-      font-weight: 700;
+    &--active {
+      background: #f59e0b;
+      color: #030712;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
     }
   }
 }
 
-.epoch-content {
-  padding: 1.5rem;
+/* Horizontal Epoch Rail */
+.epoch-rail {
+  position: relative;
+  width: 100%;
+  padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+  box-sizing: border-box;
+}
+
+.rail-track-bg {
+  position: absolute;
+  top: 36px;
+  left: 30px;
+  right: 30px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  z-index: 1;
+
+  @media (max-width: 640px) {
+    left: 20px;
+    right: 20px;
+  }
+}
+
+.rail-track-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #00f2fe 50%, #10b981 100%);
+  border-radius: 3px;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+.rail-nodes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 2;
+}
+
+.rail-node-btn {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  gap: 0.65rem;
+  outline: none;
+
+  .node-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #0b1329;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    .node-num {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #94a3b8;
+      transition: color 0.2s ease;
+    }
+  }
+
+  .node-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+
+    .node-short-title {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #94a3b8;
+      white-space: nowrap;
+      transition: color 0.2s ease;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+
+    .node-loss {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #64748b;
+      white-space: nowrap;
+
+      @media (max-width: 640px) {
+        display: none;
+      }
+    }
+  }
+
+  &:hover {
+    .node-circle {
+      border-color: rgba(0, 242, 254, 0.5);
+      transform: scale(1.08);
+
+      .node-num {
+        color: #f8fafc;
+      }
+    }
+  }
+
+  &--passed {
+    .node-circle {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.15);
+
+      .node-num {
+        color: #10b981;
+      }
+    }
+  }
+
+  &--active {
+    .node-circle {
+      border-color: #00f2fe;
+      background: #00f2fe;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+      transform: scale(1.15);
+
+      .node-num {
+        color: #030712;
+        font-weight: 800;
+      }
+    }
+
+    .node-meta {
+      .node-short-title {
+        color: #00f2fe;
+      }
+
+      .node-loss {
+        color: #f8fafc;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+/* Milestone Card */
+.milestone-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 19, 41, 0.92);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+  transition: border-color 0.4s ease;
+
+  &:hover {
+    border-color: rgba(0, 242, 254, 0.3);
+  }
+}
+
+.card-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.75rem;
+  background: rgba(4, 8, 22, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+
+  .top-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .epoch-tag {
+      color: #f59e0b;
+      font-weight: 700;
+    }
+
+    .step-tag {
+      color: #94a3b8;
+    }
+
+    .kind-tag {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+    }
+  }
+
+  .top-right {
+    .period-badge {
+      color: #94a3b8;
+    }
+  }
+}
+
+.card-body {
+  padding: 2rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+
+  @media (max-width: 640px) {
+    padding: 1.5rem;
+  }
 }
 
 .title-row {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
 
-  .epoch-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #f8fafc;
+  .title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    .institution-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+
+    .role-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #00f2fe;
+
+      .role-arrow {
+        color: #10b981;
+      }
+    }
   }
 
-  .epoch-period {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: #94a3b8;
+  .loss-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0.5rem 0.9rem;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+
+    .loss-lbl {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      color: #64748b;
+      letter-spacing: 0.05em;
+    }
+
+    .loss-val {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #10b981;
+    }
   }
 }
 
-.epoch-role {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  color: #00f2fe;
-
-  .role-arrow {
-    color: #10b981;
-  }
-
-  .kind-tag {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #cbd5e1;
-    margin-left: 0.5rem;
-  }
-}
-
-.epoch-summary {
+.milestone-summary {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: #94a3b8;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+  max-width: 920px;
 }
 
 .outputs-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 
   .outp-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 0.84rem;
+    gap: 0.65rem;
+    font-size: 0.9rem;
     color: #cbd5e1;
-    line-height: 1.45;
+    line-height: 1.5;
 
-    .outp-dot {
+    .outp-icon {
       color: #10b981;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      margin-top: 0.15rem;
     }
   }
 }
@@ -460,17 +780,17 @@ onBeforeUnmount(() => {
 .metrics-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
+  gap: 0.65rem;
 
-  .m-pill {
+  .metric-pill {
     display: inline-flex;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.4rem;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    background: rgba(0, 242, 254, 0.08);
+    font-size: 0.76rem;
+    background: rgba(0, 242, 254, 0.06);
     border: 1px solid rgba(0, 242, 254, 0.2);
-    padding: 0.25rem 0.6rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 6px;
 
     .m-lbl {
@@ -484,16 +804,61 @@ onBeforeUnmount(() => {
   }
 }
 
-.tags-row {
+.card-footer {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
+  gap: 1rem;
 
-  .tag-pill {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: #64748b;
+  .tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+  }
+
+  .stepper-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .step-arrow-btn {
+      padding: 0.4rem 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #00f2fe;
+        color: #00f2fe;
+      }
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+    }
+
+    .step-indicator {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: #64748b;
+    }
   }
 }
 </style>

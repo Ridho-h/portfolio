@@ -56,7 +56,7 @@
           <div class="channel-card">
             <div class="channel-meta">
               <span class="c-lbl">DIRECT TRANSMISSION:</span>
-              <span class="c-val">muhammadridhohidayat.work@gmail.com</span>
+              <span class="c-val">mridhohidayat09@gmail.com</span>
             </div>
             <button class="cyber-btn cyber-btn--primary c-btn" @click="copyEmail" @mouseenter="onHover">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,7 +165,7 @@ function onHover() {
 }
 
 function copyEmail() {
-  navigator.clipboard.writeText('muhammadridhohidayat.work@gmail.com');
+  navigator.clipboard.writeText('mridhohidayat09@gmail.com');
   copied.value = true;
   soundManager.playChime(750);
   setTimeout(() => {

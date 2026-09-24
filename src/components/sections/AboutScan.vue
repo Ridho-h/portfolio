@@ -183,7 +183,7 @@
                   <span class="cap-title">Hybrid RAG &amp; Vector Search</span>
                 </div>
                 <p class="cap-detail">
-                  Reciprocal Rank Fusion (BM25 + FAISS dense retrieval) with LangSmith golden-dataset tracing and zero-hallucination guarantees.
+                  Pinecone vector search with ReAct agent tool calling and LangSmith golden-dataset tracing for grounded, zero-hallucination responses.
                 </p>
               </div>
             </div>
