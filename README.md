@@ -192,28 +192,3 @@ npm run build
 npm run preview
 ```
 
----
-
-## 📤 Manual Git Push Instructions
-
-To push your latest changes and the updated README to your GitHub repository:
-
-```bash
-# 1. Check current status
-git status
-
-# 2. Stage all modifications
-git add .
-
-# 3. Commit with a clear semantic message
-git commit -m "docs: update README for portfolio v3 architecture and 3D features"
-
-# 4. Push to your main branch
-git push origin main
-```
-
----
-
-## 📄 License
-
-Created and maintained by [Muhammad Ridho Hidayat](https://github.com/Ridho-h). Released under the [MIT License](LICENSE).
