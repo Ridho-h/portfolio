@@ -1701,10 +1701,12 @@ function animate(timeMs: number) {
     rTargetY = 0.45;
     rTargetZ = 1.1;
   } else if (state.currentChapter === 'projects') {
-    // Gracefully hovers on upper-left: completely clear of hologram stage and project text
-    rTargetX = -1.65;
-    rTargetY = 1.25;
-    rTargetZ = 1.2;
+    // Desktop: left-side lane for the flight-across entrance animation
+    // Mobile (portrait): right-side to stay in viewport
+    const isMobile = window.innerWidth < 768;
+    rTargetX = isMobile ? 1.55 : -1.65;
+    rTargetY = isMobile ? 0.5 : 1.25;
+    rTargetZ = isMobile ? 1.0 : 1.2;
   } else {
     // Contact
     rTargetX = 1.35;

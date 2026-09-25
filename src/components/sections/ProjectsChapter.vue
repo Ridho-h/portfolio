@@ -472,12 +472,107 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .projects-pinned-pad {
+    padding: 4.5rem 1.25rem 2rem;
+  }
+
+  .projects-hud-rail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .project-switcher-pills {
+    width: 100%;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 4px;
+
+    .switcher-pill {
+      padding: 5px 10px;
+      font-size: 10px;
+    }
+  }
+
   .editorial-showcase-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .stage-hologram-window {
     display: none;
+  }
+
+  .project-details {
+    .title-lockup {
+      .giant-index {
+        font-size: 2rem;
+      }
+      .project-title {
+        font-size: 2rem;
+      }
+    }
+
+    .metrics-rail {
+      gap: 0.75rem;
+      padding: 10px 12px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+
+      .metric-item {
+        flex-shrink: 0;
+      }
+    }
+
+    .project-actions-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .repo-link-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .projects-pinned-pad {
+    padding: 4rem 1rem 1.5rem;
+  }
+
+  .project-details {
+    .title-lockup {
+      .giant-index {
+        display: none;
+      }
+      .project-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .project-tagline {
+      font-size: 13px;
+    }
+
+    .project-summary {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  }
+
+  .project-switcher-pills {
+    .switcher-pill {
+      padding: 4px 8px;
+      font-size: 9px;
+
+      .pill-name {
+        display: none;
+      }
+    }
   }
 }
 </style>
