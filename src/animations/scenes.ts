@@ -1,6 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { soundManager } from '../audio/soundManager';
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -82,7 +82,6 @@ export function setupSceneTriggers(triggerElement: HTMLElement) {
 
         if (maxIdx !== sceneState.activeIndex) {
           sceneState.activeIndex = maxIdx;
-          soundManager.playSwoosh();
           changeListeners.forEach((cb) => cb(maxIdx));
         }
       },

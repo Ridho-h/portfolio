@@ -173,7 +173,6 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { trainingEpochs } from '../../data/timeline-epochs';
-import { soundManager } from '../../audio/soundManager';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -199,7 +198,7 @@ const shortTitles = [
 ];
 
 function onHover() {
-  soundManager.playHover();
+  
 }
 
 function selectEpoch(idx: number, isAutomatic = false) {
@@ -207,7 +206,7 @@ function selectEpoch(idx: number, isAutomatic = false) {
   activeIdx.value = idx;
 
   if (!isAutomatic) {
-    soundManager.playClick();
+    
   }
 
   // Smooth card transition
@@ -227,7 +226,7 @@ function cycleEpoch(delta: number) {
 
 function toggleAutoPlay() {
   isAutoPlaying.value = !isAutoPlaying.value;
-  soundManager.playClick();
+  
 
   if (isAutoPlaying.value) {
     runAutoPlayStep();
@@ -244,7 +243,6 @@ function runAutoPlayStep() {
     if (!isAutoPlaying.value) return;
     const nextIdx = (activeIdx.value + 1) % trainingEpochs.length;
     selectEpoch(nextIdx, true);
-    soundManager.playChime(500 + nextIdx * 60);
 
     if (nextIdx === trainingEpochs.length - 1) {
       // Completed full run, pause after reaching final converged epoch
@@ -269,7 +267,7 @@ onMounted(() => {
       start: 'top 75%',
       once: true,
       onEnter: () => {
-        soundManager.playHover();
+        
       },
     },
   });
@@ -330,7 +328,7 @@ onMounted(() => {
         );
         if (targetIdx !== activeIdx.value) {
           activeIdx.value = targetIdx;
-          soundManager.playHover();
+          
         }
       },
     });

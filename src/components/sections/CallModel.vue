@@ -143,7 +143,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { soundManager } from '../../audio/soundManager';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -161,13 +160,12 @@ const fullCommand = 'POST /v1/dispatch-model --channel "contact" --recipient "ri
 let stInstance: ScrollTrigger | null = null;
 
 function onHover() {
-  soundManager.playHover();
+  
 }
 
 function copyEmail() {
   navigator.clipboard.writeText('mridhohidayat09@gmail.com');
   copied.value = true;
-  soundManager.playChime(750);
   setTimeout(() => {
     copied.value = false;
   }, 3000);
@@ -182,12 +180,11 @@ function startCallSequence() {
     if (currentIdx <= fullCommand.length) {
       typedCommand.value = fullCommand.slice(0, currentIdx);
       currentIdx++;
-      if (currentIdx % 4 === 0) soundManager.playHover();
+      if (currentIdx % 4 === 0) 
     } else {
       clearInterval(interval);
       isTyping.value = false;
       isCalled.value = true;
-      soundManager.playChime(680);
     }
   }, 24);
 }

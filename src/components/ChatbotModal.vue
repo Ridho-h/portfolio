@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import { ref, nextTick, watch, onBeforeUnmount } from 'vue';
 import { knowledge, PORTFOLIO_SYSTEM_PROMPT } from '../data/knowledge';
-import { soundManager } from '../audio/soundManager';
+
 import { scrollEngine } from '../animations/scroll';
 
 const props = defineProps<{
@@ -143,7 +143,7 @@ const messages = ref<Message[]>([
 ]);
 
 function close() {
-  soundManager.playClick();
+  
   emit('close');
 }
 
@@ -166,7 +166,7 @@ async function submitMessage() {
 
   messages.value.push({ sender: 'user', text: query });
   userInput.value = '';
-  soundManager.playTerminalBeep();
+  
   scrollToBottom();
 
   isTyping.value = true;
@@ -200,7 +200,6 @@ async function submitMessage() {
           if (reply) {
             messages.value.push({ sender: 'agent', text: reply });
             isTyping.value = false;
-            soundManager.playChime(620);
             scrollToBottom();
             return;
           }
@@ -230,7 +229,6 @@ async function submitMessage() {
         if (data.reply) {
           messages.value.push({ sender: 'agent', text: data.reply });
           isTyping.value = false;
-          soundManager.playChime(620);
           scrollToBottom();
           return;
         }
@@ -247,7 +245,6 @@ async function submitMessage() {
     const answer = findAnswer(query);
     messages.value.push({ sender: 'agent', text: answer });
     isTyping.value = false;
-    soundManager.playChime(620);
     scrollToBottom();
   }, 420);
 }

@@ -200,7 +200,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { soundManager } from '../../audio/soundManager';
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -236,7 +236,6 @@ onMounted(() => {
 
       // Play tactical audio tick when new bounding box snaps into view
       if (activeBoxCount.value > lastBoxCount) {
-        soundManager.playClick();
         lastBoxCount = activeBoxCount.value;
       } else if (activeBoxCount.value < lastBoxCount) {
         lastBoxCount = activeBoxCount.value;

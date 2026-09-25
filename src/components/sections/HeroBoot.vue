@@ -191,7 +191,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { soundManager } from '../../audio/soundManager';
 import { scrollEngine } from '../../animations/scroll';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -226,7 +225,6 @@ function triggerWakeImmediately() {
   isAwake.value = true;
   visibleLogs.value = allBootLogs;
   screenGlowOpacity.value = 0.85;
-  soundManager.playChime(640);
 }
 
 onMounted(() => {
@@ -261,7 +259,7 @@ onMounted(() => {
       const targetCount = Math.max(1, Math.min(allBootLogs.length, Math.floor(bootProgress * (allBootLogs.length + 1))));
       if (visibleLogs.value.length !== targetCount) {
         visibleLogs.value = allBootLogs.slice(0, targetCount);
-        soundManager.playHover();
+        
       }
 
       // Screen glow & awake state
@@ -277,7 +275,6 @@ onMounted(() => {
         screenGlowOpacity.value = 0.85;
         if (!isAwake.value) {
           isAwake.value = true;
-          soundManager.playChime(640);
         }
       }
 

@@ -90,7 +90,6 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { skillNodes, skillClusters, SkillNode } from '../../data/skills-galaxy';
-import { soundManager } from '../../audio/soundManager';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -118,7 +117,7 @@ let missFrameCount = 0;
 
 function filterCluster(clusterId: string) {
   activeCluster.value = clusterId;
-  soundManager.playClick();
+  
 
   nodeMeshes.forEach(({ mesh, data }) => {
     const isVisible = clusterId === 'all' || data.cluster === clusterId;
@@ -302,7 +301,7 @@ function animate() {
         // Throttled sound: only play if at least 200ms passed since last sound
         const now = performance.now();
         if (now - lastHoverSoundTime > 200) {
-          soundManager.playHover();
+          
           lastHoverSoundTime = now;
         }
 

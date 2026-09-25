@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { soundManager } from '../../audio/soundManager';
+
 
 const emailAddress = 'mridhohidayat09@gmail.com';
 const emailCopied = ref(false);
@@ -93,7 +93,6 @@ const emailCopied = ref(false);
 function copyEmail() {
   navigator.clipboard.writeText(emailAddress);
   emailCopied.value = true;
-  soundManager.playChime();
   setTimeout(() => {
     emailCopied.value = false;
   }, 3000);

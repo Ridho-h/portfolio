@@ -17,37 +17,18 @@
           class="nav-link-btn"
           :class="{ 'is-active': activeSection === item.id }"
           @click="scrollToSection(item.id)"
-          @mouseenter="soundManager.playHover()"
         >
           <span class="link-num">0{{ idx + 1 }}</span>
           <span class="link-label">{{ item.label }}</span>
         </button>
       </nav>
 
-      <!-- Right Controls: Audio & Direct Action -->
+      <!-- Right Controls: Direct Action -->
       <div class="nav-actions">
-        <!-- Audio Synthesizer Toggle -->
-        <button
-          class="audio-pill"
-          :class="{ 'is-muted': isMuted }"
-          :title="isMuted ? 'Unmute Audio' : 'Mute Audio'"
-          @click="toggleAudio"
-          @mouseenter="soundManager.playHover()"
-        >
-          <span class="audio-bars" v-if="!isMuted">
-            <span class="bar bar-1"></span>
-            <span class="bar bar-2"></span>
-            <span class="bar bar-3"></span>
-          </span>
-          <span v-else class="audio-off-icon">✕</span>
-          <span class="audio-text">{{ isMuted ? 'MUTED' : 'AUDIO' }}</span>
-        </button>
-
         <!-- Direct Contact Trigger -->
         <button
           class="action-btn"
           @click="scrollToSection('contact')"
-          @mouseenter="soundManager.playHover()"
         >
           <span>TALK</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -61,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { soundManager } from '../audio/soundManager';
+
 import { scrollEngine } from '../animations/scroll';
 
 const props = defineProps<{
@@ -69,7 +50,6 @@ const props = defineProps<{
 }>();
 
 const isScrolled = ref(false);
-const isMuted = ref(soundManager.getMuted());
 const internalActiveSection = ref('hero');
 const activeSection = computed(() => props.currentChapter || internalActiveSection.value);
 
@@ -78,10 +58,6 @@ const navItems = [
   { id: 'projects', label: 'PROJECTS' },
   { id: 'contact', label: 'CONTACT' },
 ];
-
-function toggleAudio() {
-  isMuted.value = soundManager.toggleMute();
-}
 
 function scrollTo(y: number) {
   scrollEngine.scrollTo(y);
@@ -227,49 +203,6 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 10px;
 
-    .audio-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 9999px;
-      color: #94a3b8;
-      cursor: pointer;
-      font-family: 'Martian Mono', monospace;
-      font-size: 10px;
-      transition: all 0.2s ease;
-
-      .audio-bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 2px;
-        height: 10px;
-
-        .bar {
-          width: 2px;
-          background: #10b981;
-          border-radius: 1px;
-          animation: barBounce 1s infinite alternate;
-
-          &.bar-1 { height: 6px; animation-delay: 0.1s; }
-          &.bar-2 { height: 10px; animation-delay: 0.3s; }
-          &.bar-3 { height: 4px; animation-delay: 0.2s; }
-        }
-      }
-
-      .audio-off-icon {
-        font-size: 9px;
-        color: #ef4444;
-      }
-
-      &:hover {
-        color: #f8fafc;
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-    }
-
     .action-btn {
       display: inline-flex;
       align-items: center;
@@ -293,11 +226,6 @@ onBeforeUnmount(() => {
       }
     }
   }
-}
-
-@keyframes barBounce {
-  0% { transform: scaleY(0.4); }
-  100% { transform: scaleY(1); }
 }
 
 @media (max-width: 768px) {

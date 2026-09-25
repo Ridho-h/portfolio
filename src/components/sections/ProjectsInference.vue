@@ -156,7 +156,6 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { projectsData } from '../../data/projects-data';
-import { soundManager } from '../../audio/soundManager';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -180,13 +179,13 @@ const verdictMap: Record<string, string> = {
 const inferenceMsg = ref(verdictMap[projectsData[0].id]);
 
 function onHover() {
-  soundManager.playHover();
+  
 }
 
 function selectProject(idx: number) {
   if (idx === activeIdx.value) return;
   activeIdx.value = idx;
-  soundManager.playClick();
+  
   inferenceMsg.value = verdictMap[projectsData[idx].id];
 
   // Quick card transition
@@ -207,13 +206,12 @@ function cycleProject(delta: number) {
 function triggerInference() {
   if (isInferring.value) return;
   isInferring.value = true;
-  soundManager.playTerminalBeep();
+  
   inferenceMsg.value = `SAMPLING LATENT SPACE FOR [${currentProj.value.name}]...`;
 
   setTimeout(() => {
     isInferring.value = false;
     inferenceMsg.value = verdictMap[currentProj.value.id];
-    soundManager.playChime(620 + activeIdx.value * 70);
   }, 450);
 }
 
@@ -229,7 +227,7 @@ onMounted(() => {
       start: 'top 75%',
       once: true,
       onEnter: () => {
-        soundManager.playHover();
+        
       },
     },
   });

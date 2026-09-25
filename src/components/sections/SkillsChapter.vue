@@ -18,7 +18,6 @@
             class="filter-pill"
             :class="{ 'is-active': selectedCluster === null }"
             @click="onSelectCluster(null)"
-            @mouseenter="soundManager.playHover()"
           >
             <span class="pill-dot pill-dot--all"></span>
             <span class="pill-label">ALL DOMAINS</span>
@@ -32,7 +31,6 @@
             :class="{ 'is-active': selectedCluster === cluster.id }"
             :style="{ '--c-color': cluster.color }"
             @click="onSelectCluster(cluster.id)"
-            @mouseenter="soundManager.playHover()"
           >
             <span class="pill-dot"></span>
             <span class="pill-label">{{ cluster.name }}</span>
@@ -81,7 +79,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { skillClusters, SkillNode } from '../../data/skills-galaxy';
-import { soundManager } from '../../audio/soundManager';
 
 defineProps<{
   activeNode?: SkillNode | null;
@@ -95,7 +92,7 @@ const selectedCluster = ref<string | null>(null);
 
 function onSelectCluster(id: string | null) {
   selectedCluster.value = id;
-  soundManager.playClick();
+  
   emit('filter-cluster', id);
 }
 </script>
