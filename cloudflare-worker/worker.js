@@ -163,7 +163,7 @@ export default {
               contents,
               generationConfig: {
                 temperature: 0.5,
-                maxOutputTokens: 600,
+                maxOutputTokens: 1200,
               },
             }),
           });
@@ -196,7 +196,7 @@ export default {
               contents: preambleContents,
               generationConfig: {
                 temperature: 0.5,
-                maxOutputTokens: 600,
+                maxOutputTokens: 1200,
               },
             }),
           });

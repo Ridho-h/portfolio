@@ -11,8 +11,8 @@
             <div class="header-identity">
               <span class="identity-tag">UNIT_01 // RIDHO_AI</span>
               <span class="identity-status">
-                <span class="status-dot"></span>
-                AUTONOMOUS AGENT ACTIVE
+                <span class="status-dot" :class="{ 'status-dot--offline': !isApiConnected }"></span>
+                {{ isApiConnected ? 'ONLINE // GEMINI 1.5 FLASH' : 'OFFLINE GROUNDED' }}
               </span>
             </div>
           </div>
@@ -95,7 +95,7 @@
 
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue';
-import { soundManager } from '../../audio/soundManager';
+
 
 const props = defineProps<{
   isOpen: boolean;
@@ -115,6 +115,12 @@ const inputQuery = ref('');
 const isTyping = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 const messagesRef = ref<HTMLElement | null>(null);
+const isApiConnected = ref(false);
+
+// API Configuration
+const directGeminiKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim();
+const chatApiUrl = (import.meta.env.VITE_CHAT_API_URL as string | undefined)?.trim();
+isApiConnected.value = Boolean(directGeminiKey || chatApiUrl);
 
 const quickChips = [
   { label: 'Key Skills & Stack', prompt: 'What are your core AI/ML skills and technical stack?' },
@@ -230,11 +236,9 @@ Ridho's core expertise lies at the intersection of **deep learning research and 
 Feel free to ask about **SpotterAI**, his **UNSRI thesis (3.92 Cum Laude)**, or click any of the suggested prompt chips below!`;
 }
 
-function handleSend() {
+async function handleSend() {
   const text = inputQuery.value.trim();
   if (!text || isTyping.value) return;
-
-  soundManager.playClick();
 
   // Add user message
   messages.value.push({
@@ -247,18 +251,72 @@ function handleSend() {
   isTyping.value = true;
   scrollToBottom();
 
-  // Simulate agent neural processing & typing
+  // 1. Try direct Gemini API call (if key configured)
+  if (directGeminiKey) {
+    try {
+      const candidates = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
+      for (const model of candidates) {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${directGeminiKey}`;
+        const res = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 1200 },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) {
+            messages.value.push({ role: 'agent', text: reply, timestamp: getCurrentTime() });
+            isTyping.value = false;
+            scrollToBottom();
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Direct Gemini API failed:', err);
+    }
+  }
+
+  // 2. Try Cloudflare Worker proxy (if URL configured)
+  if (chatApiUrl) {
+    try {
+      const history = messages.value.slice(0, -1).map((m) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }],
+      }));
+
+      const res = await fetch(chatApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reply) {
+          messages.value.push({ role: 'agent', text: data.reply, timestamp: getCurrentTime() });
+          isTyping.value = false;
+          scrollToBottom();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Chat API proxy failed:', err);
+    }
+  }
+
+  // 3. Fallback to local grounded knowledge engine
   setTimeout(() => {
     const reply = generateAnswer(text);
+    messages.value.push({ role: 'agent', text: reply, timestamp: getCurrentTime() });
     isTyping.value = false;
-    messages.value.push({
-      role: 'agent',
-      text: reply,
-      timestamp: getCurrentTime(),
-    });
-    soundManager.playHover();
     scrollToBottom();
-  }, 650);
+  }, 420);
 }
 
 function handleSendQuickChip(prompt: string) {
@@ -270,7 +328,6 @@ watch(
   () => props.isOpen,
   (val) => {
     if (val) {
-      soundManager.playClick();
       scrollToBottom();
       nextTick(() => {
         inputRef.value?.focus();
@@ -371,6 +428,11 @@ watch(
           border-radius: 50%;
           background: #10b981;
           box-shadow: 0 0 6px #10b981;
+
+          &--offline {
+            background: #94a3b8;
+            box-shadow: none;
+          }
         }
       }
     }
