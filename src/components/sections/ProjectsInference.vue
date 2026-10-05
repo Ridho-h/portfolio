@@ -714,4 +714,82 @@ onBeforeUnmount(() => {
     transform: rotate(360deg);
   }
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .projects-inference {
+    padding: 3.5rem 1rem;
+  }
+
+  .projects-container {
+    gap: 1.25rem;
+  }
+
+  .section-title {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .card-top-bar {
+    padding: 0.65rem 1rem;
+    font-size: 0.68rem;
+
+    .top-left {
+      .cat-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
+      }
+
+      .code-badge {
+        display: none;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 1.15rem;
+    gap: 1rem;
+  }
+
+  .content-header {
+    .repo-link-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.72rem;
+    }
+  }
+
+  .model-summary {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .inference-action-panel {
+    gap: 0.75rem;
+
+    .run-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.65rem 1rem;
+      font-size: 0.76rem;
+    }
+
+    .action-verdict {
+      min-width: 0;
+      width: 100%;
+
+      .verdict-bar {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.68rem;
+      }
+    }
+
+    .action-nav {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
 </style>

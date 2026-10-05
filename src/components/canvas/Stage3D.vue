@@ -1066,7 +1066,10 @@ function animateProjectorAndHolograms(
 
   state.currentProjectColor.lerp(state.targetProjectColor, 0.08);
 
-  const pScale = 0.85 + 0.15 * op;
+  const vw = window.innerWidth || 1;
+  const isMobile = vw < 900 || (camera ? camera.aspect < 1.0 : false);
+  const baseScale = isMobile ? 0.56 : 1.0;
+  const pScale = (0.85 + 0.15 * op) * baseScale;
   projectsGroup.scale.set(pScale, pScale, pScale);
 
   // STABLE FORWARD-FACING PROJECTION WITH DYNAMIC FLIGHT BANKING
@@ -1658,8 +1661,11 @@ function animate(timeMs: number) {
   // and accelerates out to the right when exiting!
   // -------------------------------------------------------------
   const aspect = camera ? camera.aspect : 1.77;
-  const restingProjX = Math.max(1.65, Math.min(2.15, aspect * 1.22));
-  const offscreenProjX = Math.max(restingProjX + 3.8, aspect * 2.4);
+  const vw = window.innerWidth || 1;
+  const isMobile = vw < 900 || aspect < 1.0;
+
+  const restingProjX = isMobile ? 0.0 : Math.max(1.65, Math.min(2.15, aspect * 1.22));
+  const offscreenProjX = isMobile ? 3.5 : Math.max(restingProjX + 3.8, aspect * 2.4);
 
   const targetFlightX = isProjectsActive ? restingProjX : offscreenProjX;
   const flightSpeed = isProjectsActive ? 6.5 : 8.5;
@@ -1673,6 +1679,9 @@ function animate(timeMs: number) {
   droneFlightBankZ += (targetBankZ - droneFlightBankZ) * (1.0 - Math.exp(-12.0 * delta));
 
   projectsGroup.position.x = droneFlightX;
+  // On mobile: position Y so the larger hologram screen floats completely above the card
+  const targetProjY = isMobile ? 0.62 : 0.0;
+  projectsGroup.position.y += (targetProjY - projectsGroup.position.y) * 0.1;
 
   // Group is visible whenever the drone is inside the screen area or still has opacity
   projectsGroup.visible = (droneFlightX < (offscreenProjX - 0.1)) || (opacities.projects > 0.001) || isProjectsActive;
@@ -1683,35 +1692,66 @@ function animate(timeMs: number) {
 
   // -------------------------------------------------------------
   // Animate 3D Robot Companion: Chapter-Mapped Flight Waypoints
-  // - Hero: Hovering upper right of hero [1.75, 0.35, 1.0]
-  // - About: Hovering peacefully in the upper-right open space [1.75, 0.45, 1.1]
-  //   Completely clear of the photo on the left, safely below the top navbar!
-  // - Projects: Upper-left corner [-1.65, 1.25, 1.2] watching the hologram from across the screen
-  // - Contact: Lower right assistant position [1.35, 0.15, 1.5]
+  // Frustum-aware positioning: mathematically guarantees the robot is ALWAYS inside
+  // the camera viewport on all screen sizes (mobile portrait, tablet, desktop).
   // -------------------------------------------------------------
+  function getFrustumHalfWidth(targetZ: number): number {
+    if (!camera) return 1.5;
+    const dist = Math.max(0.1, camera.position.z - targetZ);
+    const vFovRad = THREE.MathUtils.degToRad(camera.fov);
+    const halfH = Math.tan(vFovRad / 2) * dist;
+    return halfH * camera.aspect;
+  }
+
   let rTargetX = 1.75, rTargetY = 0.35, rTargetZ = 1.0;
   if (state.currentChapter === 'hero') {
-    rTargetX = 1.75;
-    rTargetY = 0.35;
-    rTargetZ = 1.0;
+    if (isMobile) {
+      const halfW = getFrustumHalfWidth(1.5);
+      rTargetX = halfW * 0.48; // Upper-right corner of mobile viewport
+      rTargetY = 0.85;
+      rTargetZ = 1.5;
+    } else {
+      rTargetX = 1.75;
+      rTargetY = 0.35;
+      rTargetZ = 1.0;
+    }
   } else if (state.currentChapter === 'about') {
-    // Open negative space in the upper-right:
-    // Completely unblocked by photo (on the left), well below the top navbar!
-    rTargetX = 1.75;
-    rTargetY = 0.45;
-    rTargetZ = 1.1;
+    if (isMobile) {
+      const halfW = getFrustumHalfWidth(1.5);
+      rTargetX = halfW * 0.48;
+      rTargetY = 0.85;
+      rTargetZ = 1.5;
+    } else {
+      rTargetX = 1.75;
+      rTargetY = 0.45;
+      rTargetZ = 1.1;
+    }
   } else if (state.currentChapter === 'projects') {
-    // Desktop: left-side lane for the flight-across entrance animation
-    // Mobile (portrait): right-side to stay in viewport
-    const isMobile = window.innerWidth < 768;
-    rTargetX = isMobile ? 1.55 : -1.65;
-    rTargetY = isMobile ? 0.5 : 1.25;
-    rTargetZ = isMobile ? 1.0 : 1.2;
+    if (isMobile) {
+      // In Projects on mobile, place the cute companion robot in the upper-right corner
+      // above the hologram's right flank, watching over the scene!
+      const halfW = getFrustumHalfWidth(1.4);
+      rTargetX = halfW * 0.54;
+      rTargetY = 1.15;
+      rTargetZ = 1.4;
+    } else {
+      // Desktop: left-side lane watching the hologram from across the screen
+      rTargetX = -1.65;
+      rTargetY = 1.25;
+      rTargetZ = 1.2;
+    }
   } else {
     // Contact
-    rTargetX = 1.35;
-    rTargetY = 0.15;
-    rTargetZ = 1.5;
+    if (isMobile) {
+      const halfW = getFrustumHalfWidth(1.5);
+      rTargetX = halfW * 0.45;
+      rTargetY = 0.70;
+      rTargetZ = 1.5;
+    } else {
+      rTargetX = 1.35;
+      rTargetY = 0.15;
+      rTargetZ = 1.5;
+    }
   }
 
   const bobY = Math.sin(time * 2.8) * 0.06;
@@ -1722,8 +1762,10 @@ function animate(timeMs: number) {
   robotGroup.position.y += (rTargetY + bobY - robotGroup.position.y) * lerpFactor;
   robotGroup.position.z += (rTargetZ - robotGroup.position.z) * lerpFactor;
 
-  // Smooth scale on hover (compact drone scale)
-  const targetScale = isRobotHovered ? 0.72 : 0.65;
+  // Smooth scale on hover (compact drone scale, smaller on mobile so it doesn't crowd text)
+  const baseScale = isMobile ? 0.42 : 0.65;
+  const hoverScale = isMobile ? 0.48 : 0.72;
+  const targetScale = isRobotHovered ? hoverScale : baseScale;
   currentRobotScale += (targetScale - currentRobotScale) * 0.12;
   robotGroup.scale.set(currentRobotScale, currentRobotScale, currentRobotScale);
 

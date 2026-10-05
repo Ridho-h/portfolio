@@ -286,6 +286,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow-x: hidden;
 
   .project-meta {
     display: flex;
@@ -473,67 +474,197 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .projects-pinned-pad {
-    padding: 4.5rem 1.25rem 2rem;
+    padding: 4.8rem 1rem 3.8rem;
+    height: 100vh;
+    min-height: 0;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .projects-inner {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 0.4rem;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
   }
 
   .projects-hud-rail {
+    width: 100%;
+    max-width: 100%;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    box-sizing: border-box;
   }
 
   .project-switcher-pills {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     overflow-x: auto;
     gap: 6px;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
 
     .switcher-pill {
       padding: 5px 10px;
       font-size: 10px;
+      flex-shrink: 0;
     }
   }
 
   .editorial-showcase-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    align-items: stretch;
+    justify-content: flex-end;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   .stage-hologram-window {
-    display: none;
+    display: block;
+    order: -1;
+    flex: 1;
+    min-height: 140px;
+    pointer-events: none;
+    width: 100%;
+
+    .scroll-instruction {
+      display: none; // Keep 3D hologram completely clean and unobstructed on mobile
+    }
   }
 
   .project-details {
+    flex: 0 0 auto;
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    background: rgba(3, 7, 18, 0.92);
+    backdrop-filter: blur(16px);
+    border-radius: 14px;
+    padding: 0.75rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
     .title-lockup {
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 100%;
+
       .giant-index {
-        font-size: 2rem;
+        display: none; // Hide giant index on mobile so title is flush left
       }
       .project-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
+        word-break: break-word;
       }
     }
 
+    .project-meta {
+      width: 100%;
+      max-width: 100%;
+      margin-bottom: 0.4rem;
+      flex-wrap: wrap;
+      word-break: break-word;
+    }
+
+    .project-tagline {
+      width: 100%;
+      max-width: 100%;
+      font-size: 12.5px;
+      margin-bottom: 0.4rem;
+      word-break: break-word;
+    }
+
+    .project-summary {
+      width: 100%;
+      max-width: 100%;
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 0.65rem;
+      word-break: break-word;
+    }
+
     .metrics-rail {
-      gap: 0.75rem;
-      padding: 10px 12px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      gap: 0.5rem;
+      padding: 6px 10px;
       overflow-x: auto;
       flex-wrap: nowrap;
       scrollbar-width: none;
+      margin-bottom: 0.65rem;
       &::-webkit-scrollbar { display: none; }
 
       .metric-item {
         flex-shrink: 0;
+
+        .m-val {
+          font-size: 12.5px;
+        }
+        .m-lbl {
+          font-size: 8px;
+        }
       }
     }
 
     .project-actions-row {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
+      align-items: stretch;
+      gap: 0.5rem;
+
+      .stack-pills {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        &::-webkit-scrollbar { display: none; }
+
+        .tech-tag {
+          font-size: 9.5px;
+          padding: 3px 6px;
+          flex-shrink: 0;
+        }
+      }
 
       .repo-link-btn {
         width: 100%;
         justify-content: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 7px 12px;
+        font-size: 10.5px;
       }
     }
   }
@@ -541,26 +672,63 @@ onBeforeUnmount(() => {
 
 @media (max-width: 480px) {
   .projects-pinned-pad {
-    padding: 4rem 1rem 1.5rem;
+    padding: 4.5rem 0.75rem 3.5rem;
+  }
+
+  .projects-inner {
+    gap: 0.35rem;
+    justify-content: flex-start;
+  }
+
+  .stage-hologram-window {
+    flex: 1;
+    min-height: 130px;
+    height: auto;
   }
 
   .project-details {
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+
     .title-lockup {
-      .giant-index {
-        display: none;
-      }
       .project-title {
-        font-size: 1.75rem;
+        font-size: 1.35rem;
       }
     }
 
     .project-tagline {
-      font-size: 13px;
+      font-size: 12px;
+      margin-bottom: 0.35rem;
     }
 
     .project-summary {
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 11.5px;
+      line-height: 1.4;
+      margin-bottom: 0.55rem;
+    }
+
+    .metrics-rail {
+      gap: 0.4rem;
+      padding: 5px 8px;
+      margin-bottom: 0.55rem;
+
+      .metric-item {
+        .m-val {
+          font-size: 11.5px;
+        }
+        .m-lbl {
+          font-size: 7.5px;
+        }
+      }
+    }
+
+    .project-actions-row {
+      gap: 0.45rem;
+
+      .repo-link-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
     }
   }
 

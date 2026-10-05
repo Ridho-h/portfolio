@@ -229,16 +229,47 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .nav-pill {
-    padding: 6px 12px;
-    gap: 1rem;
+  .floating-nav {
+    top: 0.65rem;
+    padding: 0 0.65rem;
+  }
 
-    .brand .brand-role {
-      display: none;
+  .nav-pill {
+    padding: 5px 10px;
+    gap: 0.4rem;
+
+    .brand {
+      font-size: 11px;
+      gap: 5px;
+
+      .brand-role,
+      .brand-sep {
+        display: none;
+      }
     }
 
     .nav-links {
-      display: none;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+
+      .nav-link-btn {
+        padding: 4px 6px;
+        font-size: 9.5px;
+        letter-spacing: 0.04em;
+
+        .link-num {
+          display: none;
+        }
+      }
+    }
+
+    .nav-actions {
+      .action-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+        gap: 3px;
+      }
     }
   }
 }
