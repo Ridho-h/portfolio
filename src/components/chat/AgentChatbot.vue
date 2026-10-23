@@ -1,7 +1,7 @@
 <template>
   <transition name="chat-fade">
-    <div v-if="isOpen" class="chat-overlay" @click.self="$emit('close')">
-      <div class="chat-terminal glass-panel">
+    <div v-if="isOpen" class="chat-overlay" data-lenis-prevent @click.self="$emit('close')" @wheel.stop>
+      <div class="chat-terminal glass-panel" data-lenis-prevent @wheel.stop>
         <!-- Terminal Header -->
         <header class="chat-header">
           <div class="header-robot">
@@ -12,7 +12,7 @@
               <span class="identity-tag">UNIT_01 // RIDHO_AI</span>
               <span class="identity-status">
                 <span class="status-dot" :class="{ 'status-dot--offline': !isApiConnected }"></span>
-                {{ isApiConnected ? 'ONLINE // GEMINI 1.5 FLASH' : 'OFFLINE GROUNDED' }}
+                {{ isApiConnected ? 'ONLINE // GEMINI 3.8 FLASH' : 'OFFLINE GROUNDED' }}
               </span>
             </div>
           </div>
@@ -27,7 +27,7 @@
         </header>
 
         <!-- Message Stream Area -->
-        <main ref="messagesRef" class="chat-messages">
+        <main ref="messagesRef" class="chat-messages" data-lenis-prevent @wheel.stop>
           <div
             v-for="(msg, idx) in messages"
             :key="idx"
@@ -94,7 +94,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, watch, onBeforeUnmount } from 'vue';
+import { scrollEngine } from '../../animations/scroll';
 
 
 const props = defineProps<{
@@ -154,10 +155,17 @@ function scrollToBottom() {
 }
 
 function formatMessage(text: string): string {
-  // Simple markdown-style bold and code formatter
-  return text
+  if (!text) return '';
+  const safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  return safe
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; text-decoration:underline;">$1</a>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -254,20 +262,24 @@ async function handleSend() {
   // 1. Try direct Gemini API call (if key configured)
   if (directGeminiKey) {
     try {
-      const candidates = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
+      const candidates = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest'];
       for (const model of candidates) {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${directGeminiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
         const res = await fetch(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text }] }],
             generationConfig: { temperature: 0.5, maxOutputTokens: 1200 },
+            signal: controller.signal,
           }),
         });
 
         if (res.ok) {
-          const data = await res.json();
+          clearTimeout(timeoutId);
+        const data = await res.json();
           const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (reply) {
             messages.value.push({ role: 'agent', text: reply, timestamp: getCurrentTime() });
@@ -290,13 +302,18 @@ async function handleSend() {
         parts: [{ text: m.text }],
       }));
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
+
       const res = await fetch(chatApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history }),
+        signal: controller.signal,
       });
 
       if (res.ok) {
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data.reply) {
           messages.value.push({ role: 'agent', text: data.reply, timestamp: getCurrentTime() });
@@ -328,13 +345,27 @@ watch(
   () => props.isOpen,
   (val) => {
     if (val) {
+      scrollEngine.lenis?.stop();
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
       scrollToBottom();
       nextTick(() => {
         inputRef.value?.focus();
       });
+    } else {
+      scrollEngine.lenis?.start();
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     }
-  }
+  },
+  { immediate: true }
 );
+
+onBeforeUnmount(() => {
+  scrollEngine.lenis?.start();
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+});
 </script>
 
 <style scoped lang="scss">
@@ -349,6 +380,7 @@ watch(
   justify-content: center;
   padding: 1.5rem;
   box-sizing: border-box;
+  overscroll-behavior: contain;
 }
 
 .chat-terminal {
@@ -363,6 +395,7 @@ watch(
   border-radius: 18px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 242, 254, 0.12);
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 // Header
@@ -463,6 +496,9 @@ watch(
 .chat-messages {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;

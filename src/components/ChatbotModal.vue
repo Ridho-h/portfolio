@@ -174,7 +174,7 @@ async function submitMessage() {
   // 1. Direct browser call to Gemini (works without Cloudflare IP geolocation issues)
   if (directGeminiKey) {
     try {
-      const candidates = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-3.5-flash'];
+      const candidates = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest'];
       for (const model of candidates) {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${directGeminiKey}`;
         const res = await fetch(geminiUrl, {
@@ -194,7 +194,10 @@ async function submitMessage() {
           }),
         });
 
-        if (res.ok) {
+
+
+
+      if (res.ok) {
           const data = await res.json();
           const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (reply) {
@@ -218,11 +221,18 @@ async function submitMessage() {
         parts: [{ text: m.text }],
       }));
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
+
       const res = await fetch(chatApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: query, history }),
+        signal: controller.signal,
       });
+
+
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -287,8 +297,14 @@ function findAnswer(query: string): string {
 }
 
 function formatMessage(txt: string): string {
-  // Convert markdown bold **text** to strong
-  let formatted = txt.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  if (!txt) return '';
+  const safe = txt
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  let formatted = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   // Convert markdown italic *text* to em
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   // Convert inline code `code` to code tag
